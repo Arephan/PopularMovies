@@ -1,6 +1,7 @@
 package com.example.code.popularmovies.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -150,7 +151,6 @@ public class GridviewFragment extends Fragment {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-
                 this.currentFirstVisibleItem = firstVisibleItem;
                 this.currentVisibleItemCount = visibleItemCount;
                 this.totalItem = totalItemCount;
@@ -180,19 +180,10 @@ public class GridviewFragment extends Fragment {
                 packMovieBundle(args, (Movie) popMovieList.get(position));
                 newFragment.setArguments(args);
                 android.support.v4.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
-
-                if (getActivity().findViewById(R.id.detailsFragment) == null) {
-                    // This is a phone
-                    transaction.replace(R.id.gridviewFragmentContainer, newFragment);
-                    GridView gv = (GridView) getActivity().findViewById(R.id.gridviewFragment);
-                    gv.setVisibility(View.GONE);
-                }
-                else {
-                    transaction.replace(R.id.detailsFragment, newFragment);
-                }
-
                 transaction.addToBackStack(null);
-
+                transaction.add(R.id.gridviewFragmentContainer, newFragment);
+//            GridView gv = (GridView) getActivity().findViewById(R.id.gridviewFragment);
+//            gv.setVisibility(View.GONE);
                 transaction.commit();
             }
 
@@ -219,7 +210,7 @@ public class GridviewFragment extends Fragment {
         b.putString("plotSynopsis", favourite.plotSynopsis);
         b.putDouble("popularity", favourite.populairty);
         b.putBoolean("favourited", favourite.favourited);
-        b.putString("id", favourite.id);
+        b.putLong("id", favourite.id);
     }
 
     public void sendRequest(String URL) {

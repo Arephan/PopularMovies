@@ -9,6 +9,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,7 +21,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.code.popularmovies.R;
 import com.example.code.popularmovies.models.Favourite;
 import com.example.code.popularmovies.services.VolleySingleton;
-import com.orm.SugarContext;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -101,11 +101,21 @@ public class MovieDetailsFragment extends Fragment {
                 reviews.add(jo.getString(KEY_CONTENT));
             }
 
-            //TODO: Create fragment to just show reviews here
+            ReviewFragment newFragment = new ReviewFragment();
+            Bundle args = new Bundle();
+            args.putStringArrayList("reviews", reviews);
+            newFragment.setArguments(args);
+            android.support.v4.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            transaction.addToBackStack(null);
+            transaction.add(R.id.detailsContainer, newFragment);
+//            GridView gv = (GridView) getActivity().findViewById(R.id.gridviewFragment);
+//            gv.setVisibility(View.GONE);
+            transaction.commit();
 
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
     }
 
     private void extractArguments(Bundle b) {
@@ -136,11 +146,9 @@ public class MovieDetailsFragment extends Fragment {
         //Did user already favourite this movie?
         List<Favourite> favourites = Favourite.find(Favourite.class, "title = ?", titleStr);
 
-        if (favourites!= null && favourites.size() == 0) {  // There is always going to be only one item, since titles are unique
-            //Not favourited yet, set drawable to empty star
+        if (favourites.size() == 1) {
             favouritesButton.setImageResource(R.drawable.favourited);
         } else {
-            //favourited
             favouritesButton.setImageResource(R.drawable.unfavourited);
         }
 
@@ -165,10 +173,10 @@ public class MovieDetailsFragment extends Fragment {
                 //Confirm fav object doesn't exist yet
                 List<Favourite> favourites = Favourite.find(Favourite.class, "title=?", titleStr);
 
+
                 if (favourites.size() == 0) {
-                    //Nope user didn't press the button by accident, create favorites and save it
                     Favourite favourite = new Favourite(
-                            String.valueOf(id),
+                            id,
                             titleStr,
                             posterPathStr,
                             releaseDateStr,
@@ -180,7 +188,11 @@ public class MovieDetailsFragment extends Fragment {
                     favourite.save();
 
                     // make certain that image is set to favourited
-                    favouritesButton.setImageResource(R.drawable.favourited);
+                    favouritesButton.setImageDrawable(getResources().getDrawable(R.drawable.favourited));
+                } else {
+                    //Unfavourite
+                    favourites.get(0).delete();
+                    favouritesButton.setImageDrawable(getResources().getDrawable(R.drawable.unfavourited));
                 }
             }
         });
@@ -298,8 +310,9 @@ public class MovieDetailsFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
+    public static interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 }
+

@@ -6,7 +6,7 @@ import com.orm.SugarRecord;
  * Created by code on 2016-03-24.
  */
 public class Favourite extends SugarRecord {
-    public String id;
+    public Long id;
     public String title;
     public String posterPath;
     public String releaseDate;
@@ -19,7 +19,7 @@ public class Favourite extends SugarRecord {
     public Favourite() {
     }
 
-    public Favourite(String id, String title, String posterPath, String releaseDate, Double populairty,
+    public Favourite(Long id, String title, String posterPath, String releaseDate, Double populairty,
                      Double voteAverage, String plotSynopsis, String youtubeKey, Boolean favourited) {
         this.id = id;
         this.title = title;
