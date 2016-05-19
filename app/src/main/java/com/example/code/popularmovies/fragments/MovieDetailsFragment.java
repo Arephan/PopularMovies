@@ -106,8 +106,8 @@ public class MovieDetailsFragment extends Fragment {
             args.putStringArrayList("reviews", reviews);
             newFragment.setArguments(args);
             android.support.v4.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            transaction.add(R.id.detailsFragmentContainer, newFragment);
             transaction.addToBackStack(null);
-            transaction.add(R.id.detailsContainer, newFragment);
 //            GridView gv = (GridView) getActivity().findViewById(R.id.gridviewFragment);
 //            gv.setVisibility(View.GONE);
             transaction.commit();

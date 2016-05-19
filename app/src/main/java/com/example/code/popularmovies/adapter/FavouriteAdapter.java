@@ -26,11 +26,12 @@ public class FavouriteAdapter extends BaseAdapter {
     public FavouriteAdapter(Context context, ArrayList<Favourite> favourites) {
         this.context = context;
         this.favouritesArr = favourites;
+        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public int getCount() {
-        return 0;
+        return favouritesArr.size();
     }
 
     @Override
@@ -40,14 +41,14 @@ public class FavouriteAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return 0;
+        return favouritesArr.get(position).id;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.grid_view_layout, null, true);
+            convertView = inflater.inflate(R.layout.grid_view_layout, null);
         } else {
             ImageView posterImageView = (ImageView) convertView.findViewById(R.id.posterGridView);
             Picasso.with(context)

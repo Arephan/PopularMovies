@@ -26,8 +26,10 @@ import com.example.code.popularmovies.services.MovieParseJSON;
 import com.example.code.popularmovies.services.VolleySingleton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
+import butterknife.ButterKnife;
 
 
 public class GridviewFragment extends Fragment {
@@ -44,7 +46,7 @@ public class GridviewFragment extends Fragment {
     private String generalBaseURL = "http://api.themoviedb.org/3/movie/%s/videos";
     private ArrayList popMovieList = new ArrayList();
     private ArrayList highestRatedList = new ArrayList();
-    private ArrayList favList = new ArrayList();
+    private ArrayList favList = new ArrayList<Favourite>();
     private Integer highestRatedPageNum = 1;
     private Integer popMoviePageNum = 1;
     private Boolean sortState = true;  //true = popular movies, false = highest rated
@@ -62,17 +64,19 @@ public class GridviewFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            //Get any arguments from here
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_gridview, container, true);
-        gridView = (GridView) view.findViewById(R.id.gridView);
+        ButterKnife.bind(this,view);
         setupView();
+        if (savedInstanceState != null) {
+            gridIndex = savedInstanceState.getInt("gridIndex");
+            gridView.smoothScrollToPosition(gridIndex);
+        }
+
         return view;
     }
 
@@ -95,11 +99,6 @@ public class GridviewFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
     }
@@ -108,6 +107,14 @@ public class GridviewFragment extends Fragment {
         gridIndex = gridView.getFirstVisiblePosition();
         String URL = baseURL + searchURL + pageNumURL + pageNum + apiKeyURL;
         sendRequest(URL);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        gridIndex = gridView.getFirstVisiblePosition();
+        outState.putInt("gridIndex", gridIndex);
+        super.onSaveInstanceState(outState);
+
     }
 
     private void setupView() {
@@ -124,13 +131,54 @@ public class GridviewFragment extends Fragment {
             gridView.setAdapter(gridviewAdapter);
         }
 
+
         setupGridView();
+
 
         // BEGIN FETCHING CYCLE IF FIRST TIME LOADING.
         if (popMoviePageNum == 1 && sortState == true) {
             makeCall(popMoviesURL, popMoviePageNum);
-        } else if (highestRatedPageNum == 1 && sortState == false) {
-            makeCall(highestRatedMoviesURL, highestRatedPageNum);
+            popMoviePageNum++;
+        }
+    }
+
+    public void changeSortStatus(Integer sortState) {
+        switch (sortState) {
+            case 1:
+                this.sortState = true;
+                this.isShowingFav = false;
+                gridviewAdapter.moviesArr = popMovieList;
+                gridviewAdapter.notifyDataSetChanged();
+                gridView.setAdapter(gridviewAdapter);
+                return;
+            case 2:
+                this.sortState = false;
+                this.isShowingFav = false;
+
+                if (highestRatedPageNum == 1) {
+                    makeCall(highestRatedMoviesURL, highestRatedPageNum);
+                    highestRatedPageNum++;
+                } else {
+                    gridviewAdapter.moviesArr = highestRatedList;
+                    gridviewAdapter.notifyDataSetChanged();
+                    gridView.setAdapter(gridviewAdapter);
+                }
+                return;
+            case 3:
+                this.isShowingFav = true;
+
+                if (favouriteAdapter == null) {
+                    favouriteAdapter = new FavouriteAdapter(this.getContext(), favList);
+                }
+                //Always make sure fovouritesList is empty to avoid redundancy
+                favouriteAdapter.favouritesArr.clear();
+                List<Favourite> favList = Favourite.listAll(Favourite.class);
+                for (Favourite fav : favList) {
+                    this.favList.add(fav);
+                }
+                favouriteAdapter.notifyDataSetChanged();
+                gridView.setAdapter(favouriteAdapter);
+                return;
         }
     }
 
@@ -177,13 +225,19 @@ public class GridviewFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 MovieDetailsFragment newFragment = new MovieDetailsFragment();
                 Bundle args = new Bundle();
-                packMovieBundle(args, (Movie) popMovieList.get(position));
+                if (isShowingFav) {
+                    packFavouriteBundle(args, favouriteAdapter.getItem(position));
+                } else {
+                    packMovieBundle(args, gridviewAdapter.getItem(position));
+                }
                 newFragment.setArguments(args);
                 android.support.v4.app.FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                if (getActivity().findViewById(R.id.detailsFragmentContainer) != null) {
+                    transaction.replace(R.id.detailsFragmentContainer, newFragment);
+                } else {
+                    transaction.replace(R.id.gridviewFragmentContainer, newFragment);
+                }
                 transaction.addToBackStack(null);
-                transaction.add(R.id.gridviewFragmentContainer, newFragment);
-//            GridView gv = (GridView) getActivity().findViewById(R.id.gridviewFragment);
-//            gv.setVisibility(View.GONE);
                 transaction.commit();
             }
 
@@ -237,7 +291,6 @@ public class GridviewFragment extends Fragment {
         if (gridviewAdapter == null) {
             popMovieList.addAll(pj.movieList);
             gridviewAdapter = new GridviewAdapter(this.getContext(), popMovieList);  // Choose popMovieList by default, since it is shown by default
-            gridView.setAdapter(gridviewAdapter);
         } else {
             if (sortState == true) {
                 popMovieList.addAll(pj.movieList);
@@ -247,8 +300,8 @@ public class GridviewFragment extends Fragment {
                 gridviewAdapter.moviesArr = highestRatedList;
             }
         }
-
         gridviewAdapter.notifyDataSetChanged();
+        gridView.setAdapter(gridviewAdapter);
         gridView.smoothScrollToPosition(gridIndex);
     }
 
