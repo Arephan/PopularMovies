@@ -37,9 +37,9 @@ public class GridviewFragment extends Fragment {
     public FavouriteAdapter favouriteAdapter;
     public String apiKeyURL = new String("&api_key=783ba962d1e5f0bb1f38081b34431edd");
     public String baseURL = new String("http://api.themoviedb.org/3");
-    public String popMoviesURL = new String("/discover/movie?sort_by=popularity.desc");
-    public String highestRatedMoviesURL = new String("/discover/movie?sort_by=vote_average.desc");
-    public String pageNumURL = new String("&page=");
+    public String popMoviesURL = new String("/movie/popular?");
+    public String highestRatedMoviesURL = new String("/movie/top_rated?");
+    public String pageNumURL = new String("page=");
     @Bind(R.id.gridView)
     GridView gridView;
     private String imageBaseURL = "http://image.tmdb.org/t/p/w185";
